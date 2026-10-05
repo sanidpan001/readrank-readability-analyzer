@@ -1,0 +1,1025 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ReadRank — Free Readability Checker &amp; Flesch-Kincaid Calculator</title>
+<meta name="description" content="ReadRank is a free readability checker with five proven formulas — Flesch Reading Ease, Flesch-Kincaid grade, Gunning Fog, SMOG and Coleman-Liau — plus a per-sentence heatmap, worst-sentence diagnosis and plain-language fixes.">
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  body { background:#faf7f0; color:#1c1917; font-family:'Inter',system-ui,sans-serif; }
+  .serif { font-family:'Fraunces',Georgia,serif; }
+  .hairline { border-color:#e8e0cf; }
+  .card { background:#fffdf8; border:1px solid #e8e0cf; }
+  .score-num { font-family:'Fraunces',Georgia,serif; }
+  #rr-text, #rr-revised { font-family:Georgia,serif; }
+  .sent { border-radius:4px; padding:1px 3px; margin:1px; display:inline; line-height:2.05; transition:filter .15s; cursor:default; }
+  .sent:hover { filter:brightness(0.94); }
+  .faq summary { cursor:pointer; }
+  .faq summary::-webkit-details-marker { display:none; }
+  .faq summary::before { content:'+'; color:#0d9488; font-weight:700; margin-right:.6rem; }
+  .faq[open] summary::before { content:'–'; }
+  .dropcap::first-letter { font-family:'Fraunces',Georgia,serif; font-size:3.2em; float:left; line-height:.85; padding-right:.12em; color:#0d9488; font-weight:700; }
+  @media print { .no-print { display:none !important; } }
+</style>
+</head>
+<body id="top" class="antialiased">
+
+<!-- ============ STICKY HEADER ============ -->
+<header class="sticky top-0 z-50" style="background:rgba(250,247,240,.96); backdrop-filter:blur(8px); border-bottom:1px solid #e8e0cf;">
+  <div class="mx-auto max-w-6xl px-4 sm:px-6 h-16 flex items-center justify-between">
+    <a href="#top" class="serif text-2xl font-bold tracking-tight" style="color:#0d9488;">Read<span style="color:#1c1917;">Rank</span></a>
+    <nav class="flex items-center gap-5 text-sm font-medium">
+      <a href="#top" class="hover:opacity-70">Home</a>
+      <a href="https://fixoraa.tech" class="hover:opacity-70">More Tools</a>
+    </nav>
+  </div>
+</header>
+
+<!-- ============ HERO ============ -->
+<section class="mx-auto max-w-6xl px-4 sm:px-6 pt-10 pb-2 text-center">
+  <p class="text-xs font-semibold tracking-[0.25em] uppercase mb-3" style="color:#0d9488;">Readability Analyzer</p>
+  <h1 class="serif text-4xl sm:text-5xl font-bold leading-tight mb-4">How hard is your writing<br class="hidden sm:block"> to <em style="color:#0d9488;">actually</em> read?</h1>
+  <p class="text-base sm:text-lg max-w-2xl mx-auto mb-5" style="color:#57534e;">Paste any text and get five industry-standard readability formulas, a sentence-by-sentence heatmap, and concrete fixes — free, private, in your browser.</p>
+  <span class="inline-flex items-center gap-2 text-xs font-semibold px-4 py-2 rounded-full" style="background:#0d9488; color:#fff;">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>
+    Unlimited Free Usage
+  </span>
+  <p class="text-xs mt-2" style="color:#a8a29e;">No signup · No paywall · Your text never leaves this page</p>
+</section>
+
+<!-- ============ TOP AD ============ -->
+<div class="no-print mx-auto max-w-6xl px-4 sm:px-6 pt-4" role="complementary" aria-label="Advertisement">
+  <div class="mx-auto text-center" style="max-width:728px">
+    <span class="block text-[10px] tracking-[0.18em] uppercase text-slate-400 mb-1.5">Advertisement</span>
+    <div class="flex justify-center overflow-hidden">
+      <div class="origin-top scale-[0.44] sm:scale-100 shrink-0">
+        <script>
+          atOptions = { 'key' : '4e68ac77881c17fe128a46565d9a4e8c', 'format' : 'iframe', 'height' : 90, 'width' : 728, 'params' : {} };
+        </script>
+        <script src="https://www.highrevenueformat.com/4e68ac77881c17fe128a46565d9a4e8c/invoke.js"></script>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ TOOL ============ -->
+<main class="mx-auto max-w-6xl px-4 sm:px-6 py-8">
+<div class="card rounded-2xl p-5 sm:p-8 shadow-sm">
+
+  <div class="flex items-center justify-between flex-wrap gap-3 mb-4">
+    <h2 class="serif text-2xl font-bold">The Analyzer</h2>
+    <div class="flex gap-2">
+      <button id="rr-sample" class="no-print text-xs font-semibold px-3 py-2 rounded-lg border hairline hover:bg-stone-100">Load sample</button>
+      <button id="rr-clear" class="no-print text-xs font-semibold px-3 py-2 rounded-lg border hairline hover:bg-stone-100">Clear</button>
+    </div>
+  </div>
+
+  <textarea id="rr-text" rows="8" class="w-full rounded-xl border hairline p-4 text-[15px] leading-relaxed focus:outline-none focus:ring-2" style="--tw-ring-color:#0d9488; background:#fff;" placeholder="Paste your article, essay, email or landing page here… (aim for 100+ words for the most reliable scores)"></textarea>
+
+  <div class="flex flex-wrap items-center gap-3 mt-4 no-print">
+    <button id="rr-analyze" class="text-sm font-bold px-6 py-3 rounded-xl text-white" style="background:#0d9488;">Analyze readability</button>
+    <button id="rr-copy-summary" class="text-sm font-semibold px-4 py-3 rounded-xl border hairline hover:bg-stone-100">Copy report</button>
+    <button id="rr-download" class="text-sm font-semibold px-4 py-3 rounded-xl border hairline hover:bg-stone-100">Download .txt</button>
+  </div>
+
+  <!-- live stats -->
+  <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6">
+    <div class="rounded-xl border hairline p-4 text-center" style="background:#fff;">
+      <div id="rr-stat-words" class="score-num text-3xl font-bold">0</div>
+      <div class="text-xs uppercase tracking-widest mt-1" style="color:#a8a29e;">Words</div>
+    </div>
+    <div class="rounded-xl border hairline p-4 text-center" style="background:#fff;">
+      <div id="rr-stat-sentences" class="score-num text-3xl font-bold">0</div>
+      <div class="text-xs uppercase tracking-widest mt-1" style="color:#a8a29e;">Sentences</div>
+    </div>
+    <div class="rounded-xl border hairline p-4 text-center" style="background:#fff;">
+      <div id="rr-stat-syllables" class="score-num text-3xl font-bold">0</div>
+      <div class="text-xs uppercase tracking-widest mt-1" style="color:#a8a29e;">Syllables</div>
+    </div>
+    <div class="rounded-xl border hairline p-4 text-center" style="background:#fff;">
+      <div id="rr-stat-grade" class="score-num text-3xl font-bold" style="color:#0d9488;">—</div>
+      <div class="text-xs uppercase tracking-widest mt-1" style="color:#a8a29e;">Overall grade</div>
+    </div>
+  </div>
+
+  <!-- five formulas -->
+  <h3 class="serif text-xl font-bold mt-8 mb-1">Five-formula scorecard</h3>
+  <p class="text-sm mb-4" style="color:#78716c;">Each formula measures readability a different way. Together they are far more reliable than any single score.</p>
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+    <div class="rounded-xl border hairline p-4" style="background:#fff;">
+      <div id="rr-score-flesch" class="score-num text-4xl font-bold" style="color:#0d9488;">—</div>
+      <div class="text-sm font-semibold mt-1">Flesch Reading Ease</div>
+      <div id="rr-label-flesch" class="text-xs mt-1" style="color:#78716c;">0–100 · higher is easier</div>
+    </div>
+    <div class="rounded-xl border hairline p-4" style="background:#fff;">
+      <div id="rr-score-fk" class="score-num text-4xl font-bold" style="color:#0d9488;">—</div>
+      <div class="text-sm font-semibold mt-1">Flesch-Kincaid Grade</div>
+      <div id="rr-label-fk" class="text-xs mt-1" style="color:#78716c;">US school grade level</div>
+    </div>
+    <div class="rounded-xl border hairline p-4" style="background:#fff;">
+      <div id="rr-score-fog" class="score-num text-4xl font-bold" style="color:#0d9488;">—</div>
+      <div class="text-sm font-semibold mt-1">Gunning Fog</div>
+      <div id="rr-label-fog" class="text-xs mt-1" style="color:#78716c;">Years of schooling needed</div>
+    </div>
+    <div class="rounded-xl border hairline p-4" style="background:#fff;">
+      <div id="rr-score-smog" class="score-num text-4xl font-bold" style="color:#0d9488;">—</div>
+      <div class="text-sm font-semibold mt-1">SMOG Index</div>
+      <div id="rr-label-smog" class="text-xs mt-1" style="color:#78716c;">Best with 30+ sentences</div>
+    </div>
+    <div class="rounded-xl border hairline p-4" style="background:#fff;">
+      <div id="rr-score-cl" class="score-num text-4xl font-bold" style="color:#0d9488;">—</div>
+      <div class="text-sm font-semibold mt-1">Coleman-Liau</div>
+      <div id="rr-label-cl" class="text-xs mt-1" style="color:#78716c;">Letter-based grade level</div>
+    </div>
+  </div>
+
+  <!-- audience presets -->
+  <h3 class="serif text-xl font-bold mt-8 mb-1">Audience check</h3>
+  <p class="text-sm mb-3" style="color:#78716c;">Pick who you are writing for. ReadRank compares your overall grade against that audience's target band.</p>
+  <div class="flex flex-wrap items-center gap-3">
+    <select id="rr-audience" class="text-sm font-medium rounded-xl border hairline px-4 py-3" style="background:#fff;"></select>
+    <div id="rr-audience-verdict" class="text-sm"></div>
+  </div>
+  <p id="rr-audience-blurb" class="text-xs mt-2" style="color:#a8a29e;"></p>
+
+  <!-- heatmap -->
+  <h3 class="serif text-xl font-bold mt-8 mb-1">Sentence heatmap</h3>
+  <p class="text-sm mb-3" style="color:#78716c;">Every sentence graded individually. Teal is easy, amber is middling, red is hard. Hover any sentence for its grade.</p>
+  <div class="flex items-center gap-2 text-[11px] font-medium mb-3 no-print" style="color:#78716c;">
+    <span>Easy</span>
+    <div class="h-2.5 w-40 rounded-full" style="background:linear-gradient(90deg,#0d9488,#f59e0b,#dc2626);"></div>
+    <span>Hard</span>
+    <span class="ml-2 hidden sm:inline">Grades ≈ 3 → 8 → 12+</span>
+  </div>
+  <div id="rr-heatmap" class="rounded-xl border hairline p-5 text-[15px]" style="background:#fff; min-height:90px;">
+    <span style="color:#a8a29e;">Your graded sentences will appear here…</span>
+  </div>
+
+  <!-- worst sentence -->
+  <h3 class="serif text-xl font-bold mt-8 mb-1">Worst-sentence diagnosis</h3>
+  <p class="text-sm mb-3" style="color:#78716c;">ReadRank finds the single hardest sentence and suggests exactly where to split it.</p>
+  <div id="rr-worst" class="rounded-xl border hairline p-5" style="background:#fff;">
+    <span style="color:#a8a29e;">Analyze your text to get a diagnosis…</span>
+  </div>
+
+  <!-- revision compare -->
+  <h3 class="serif text-xl font-bold mt-8 mb-1">Revision compare</h3>
+  <p class="text-sm mb-3" style="color:#78716c;">Paste your edited draft below and see the score delta instantly — proof your rewrite actually got simpler.</p>
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+    <div>
+      <label class="text-xs font-semibold uppercase tracking-widest" style="color:#a8a29e;">Revised draft</label>
+      <textarea id="rr-revised" rows="6" class="w-full rounded-xl border hairline p-4 text-[15px] leading-relaxed mt-1 focus:outline-none focus:ring-2" style="--tw-ring-color:#f59e0b; background:#fff;" placeholder="Paste your rewritten version here…"></textarea>
+      <button id="rr-compare" class="no-print text-sm font-bold px-6 py-3 rounded-xl text-white mt-3" style="background:#f59e0b;">Compare revisions</button>
+    </div>
+    <div id="rr-compare-result" class="rounded-xl border hairline p-5" style="background:#fff;">
+      <span style="color:#a8a29e;">The before/after scorecard will appear here…</span>
+    </div>
+  </div>
+
+  <!-- synonyms -->
+  <h3 class="serif text-xl font-bold mt-8 mb-1">Simplify these words</h3>
+  <p class="text-sm mb-3" style="color:#78716c;">Complex words found in your text, each with a plainer swap. Replace a few and watch your grade drop.</p>
+  <div id="rr-synonyms" class="rounded-xl border hairline p-5" style="background:#fff;">
+    <span style="color:#a8a29e;">No complex words detected yet…</span>
+  </div>
+
+</div>
+</main>
+
+<!-- ============ BOTTOM AD ============ -->
+<div class="no-print mx-auto max-w-6xl px-4 sm:px-6 pb-4" role="complementary" aria-label="Advertisement">
+  <div class="mx-auto text-center" style="max-width:728px">
+    <span class="block text-[10px] tracking-[0.18em] uppercase text-slate-400 mb-1.5">Advertisement</span>
+    <div class="flex justify-center overflow-hidden">
+      <script async src="https://js.wpadmngr.com/static/adManager.js" data-admpid="464498"></script>
+    </div>
+  </div>
+</div>
+
+<!-- ============ SEO ARTICLE ============ -->
+<article id="seo-article" class="mx-auto max-w-3xl px-4 sm:px-6 py-10">
+  <h2 class="serif text-3xl font-bold mb-6">The complete guide to readability scores: Flesch-Kincaid, Gunning Fog, SMOG and Coleman-Liau</h2>
+
+  <p class="dropcap text-[17px] leading-relaxed mb-5">Every writer has had the same uneasy moment: you publish something you think is crystal clear, and readers bounce off it like a brick wall. A free online readability checker takes the guesswork out of that moment. Instead of asking a friend "does this make sense?", you paste your draft into a tool like ReadRank and get back hard numbers — a Flesch Reading Ease score, a Flesch-Kincaid grade level, and three more independent formulas — each one estimating how much education a reader needs to understand your text on the first pass. This guide explains what each of those scores actually measures, what "good" looks like for different audiences, and how to use a reading level checker to systematically make your writing easier without dumbing it down.</p>
+
+  <h3 class="serif text-2xl font-bold mt-8 mb-4">What a readability checker actually measures</h3>
+  <p class="text-[16px] leading-relaxed mb-4">Despite the scientific-sounding names, every mainstream readability formula is built from the same two humble ingredients: sentence length and word length. Longer sentences force readers to hold more clauses in working memory. Longer words — measured either in syllables or letters — slow down word recognition. Combine those two signals and you get a surprisingly good proxy for comprehension difficulty, validated over decades against real reading tests.</p>
+  <p class="text-[16px] leading-relaxed mb-4">The Flesch Reading Ease score, developed by Rudolf Flesch in 1948, is the grandparent of them all. It runs from 0 to 100, where higher means easier. A score of 90–100 reads like a comic book; 60–70 is "standard" plain English; 30–50 is academic-paper territory; anything under 30 is borderline unreadable for a general audience. Most professional copywriters aim for 60–70, the band where roughly 80% of adults can follow along comfortably.</p>
+  <p class="text-[16px] leading-relaxed mb-4">The Flesch-Kincaid Grade Level, created in 1975 for the US Navy, translates the same math into American school grades. A score of 8.0 means an average eighth-grader — roughly a 13-year-old — should understand the text. This is the number most people mean when they say "reading level," and it is the default grade shown by ReadRank's Flesch Kincaid calculator panel. For context, the average American adult reads at roughly a 7th–8th grade level, which is why "write at grade 8" has become the standard advice for web content, marketing copy, and public communication.</p>
+
+  <h3 class="serif text-2xl font-bold mt-8 mb-4">The other three formulas, explained</h3>
+  <p class="text-[16px] leading-relaxed mb-4">Gunning Fog Index, invented by textbook publisher Robert Gunning, adds a twist: it counts "complex words" (three or more syllables, excluding proper nouns and common inflections) and penalizes texts that are stuffed with them. The result estimates the years of formal schooling needed to understand the passage on first reading. A Fog score of 12 means a high-school senior should manage; a score of 17 or higher means graduate-level difficulty. Because it punishes jargon directly, Fog is the formula that reacts most dramatically when you swap words like "utilize" for "use" — which is exactly why ReadRank pairs it with a simpler-synonym list.</p>
+  <p class="text-[16px] leading-relaxed mb-4">The SMOG Index (Simple Measure of Gobbledygook, coined by G. Harry McLaughlin in 1969) is built on polysyllable density alone. It takes the square root of the number of long words, scaled to a 30-sentence sample, and is widely regarded as the most accurate predictor for health and safety materials — the US National Institutes of Health recommends it for patient information. Its one quirk: it genuinely needs about 30 sentences to stabilize, so treat SMOG scores on short snippets as directional rather than precise. ReadRank still shows SMOG for any text length but flags short samples.</p>
+  <p class="text-[16px] leading-relaxed mb-4">Coleman-Liau Index takes a completely different route: instead of counting syllables (which is fiddly for computers), it counts letters. Average letters per 100 words and sentences per 100 words feed a regression that outputs a grade level. It tends to be slightly harsher on technical writing full of long compound terms, and because it never needs a syllable dictionary, it is the fastest of the five to compute. When all five formulas agree — say, everything lands between grades 7 and 9 — you can be confident the score is real and not a quirk of one formula's math.</p>
+
+  <h3 class="serif text-2xl font-bold mt-8 mb-4">Why one score is never enough</h3>
+  <p class="text-[16px] leading-relaxed mb-4">Ask five different free readability checkers to score the same paragraph and you will often get five different answers. That is not because the math is wrong — it is because each formula weights the ingredients differently. A paragraph of short sentences packed with three-syllable jargon will score "easy" on Flesch-Kincaid (which leans on sentence length) but "hard" on Gunning Fog (which counts those long words). A paragraph of long, flowing sentences built from tiny words does the opposite. ReadRank shows all five side by side precisely so you can see these disagreements instead of being misled by one.</p>
+  <p class="text-[16px] leading-relaxed mb-4">The practical rule: trust the consensus, investigate the outliers. If Flesch-Kincaid says grade 8 but Fog says grade 13, your problem is vocabulary, not sentence structure — swap the jargon. If Fog and Flesch agree but SMOG spikes, your polysyllable density is high and you need simpler word choices across the board. If Coleman-Liau is the odd one out, look for long compound words and hyphenated monsters. The per-sentence heatmap makes this diagnosis visual: the red sentences are where your worst habits cluster, and fixing just those often moves the whole-document score more than rewriting everything.</p>
+
+  <h3 class="serif text-2xl font-bold mt-8 mb-4">What is a "good" score? Target bands by audience</h3>
+  <p class="text-[16px] leading-relaxed mb-4">There is no universally correct reading level — only the right level for your readers. Writing for children aged 7–10? Aim for grade 5 or below, with Flesch Reading Ease above 90. Writing for the general web — blog posts, product pages, help docs? Grade 8 is the sweet spot, ease 60–70. This is the band most search-engine guidance implicitly rewards, because it matches how the broadest audience actually reads. News sites typically land at grades 6–10: skimmable, quotable, never a chore.</p>
+  <p class="text-[16px] leading-relaxed mb-4">Business and B2B writing can run slightly hotter — grades 9–12 — because the audience is professionally motivated and the subject matter demands precision. But beware the trap: most corporate writing scores at grade 14+ not because the ideas are complex, but because the sentences are bloated. "Leverage synergistic frameworks to facilitate optimal outcomes" is a grade-16 way of saying "work together to get good results" (grade 6). Academic and technical writing for specialists may legitimately sit at grades 12–16, where domain vocabulary is shared shorthand rather than showing off. ReadRank's audience presets encode these bands so you can check your draft against the right target in one click instead of guessing.</p>
+
+  <h3 class="serif text-2xl font-bold mt-8 mb-4">How to lower your score without dumbing down your ideas</h3>
+  <p class="text-[16px] leading-relaxed mb-4">The single highest-leverage fix is splitting long sentences. A 40-word sentence at grade 14 becomes two 20-word sentences at grade 9 with zero change in meaning — and ReadRank's worst-sentence diagnosis shows you exactly where to cut. Look for the conjunctions: "and," "but," "which," "because." Each one is a candidate split point, and the tool previews the predicted grade of each half so you can see the improvement before you commit.</p>
+  <p class="text-[16px] leading-relaxed mb-4">The second fix is vocabulary triage. You do not need to purge every long word — precision matters — but audit the ones doing no work. Latinate verbs are the usual suspects: "utilize" (use), "facilitate" (help), "commence" (start), "implement" (put in place), "approximately" (about). The simplify-words panel surfaces these automatically with plain replacements; swapping five or six per page routinely drops a full grade level. Prefer Anglo-Saxon roots over Latin ones, active voice over passive, and concrete nouns over abstractions.</p>
+  <p class="text-[16px] leading-relaxed mb-4">Third, vary your rhythm. A wall of identical 18-word sentences scores fine on the formulas but reads like a metronome. Mix short punchy sentences with longer explanatory ones — the average stays low while the prose stays human. Finally, use the revision compare feature as a feedback loop: paste your rewrite, check the delta, and iterate. Writers who do three passes with a reading level checker typically cut two to three grade levels off a first draft while keeping every idea intact.</p>
+
+  <h3 class="serif text-2xl font-bold mt-8 mb-4">Readability and SEO: what actually matters</h3>
+  <p class="text-[16px] leading-relaxed mb-4">Search engines have never confirmed readability as a direct ranking factor, and any readability checker that promises "higher rankings" is overselling. But the indirect effects are real and measurable. Easier text keeps readers on the page longer, reduces bounce rates, and earns more natural shares and links — all signals that search engines do reward. Google's own content guidelines repeatedly emphasize writing for people first, in clear language, which is readability by another name.</p>
+  <p class="text-[16px] leading-relaxed mb-4">There is also an accessibility angle that matters for both ethics and reach: roughly 15% of the world's population lives with some form of dyslexia or reading difficulty, and plain language is a core requirement of WCAG accessibility guidance. A grade-8 page is simply usable by more humans than a grade-14 page. Treat your readability score as an inclusion metric, not just a style metric, and the SEO benefits follow as a side effect of serving readers better.</p>
+
+  <h3 class="serif text-2xl font-bold mt-8 mb-4">Common myths about reading level checkers</h3>
+  <p class="text-[16px] leading-relaxed mb-4">Myth one: "a low score means the writing is bad." Nonsense — it means the writing is hard. A quantum physics paper at grade 16 can be excellent; a landing page at grade 16 is a conversion disaster. Always judge the score against the audience, which is why target bands exist. Myth two: "shorter is always better." Choppy, oversimplified prose can score grade 4 and still be painful to read; the formulas measure difficulty, not quality, and they cannot see tone, structure, or argument.</p>
+  <p class="text-[16px] leading-relaxed mb-4">Myth three: "you need 300+ words for a valid score." Longer samples are more stable, yes, but the formulas work on any text — you just get more noise with less data. SMOG is the most sample-hungry of the five; Flesch-Kincaid and Coleman-Liau settle down much faster. Myth four: "readability formulas understand meaning." They do not. They count surface features that correlate with difficulty. A perfectly clear sentence with one unavoidable technical term can still score high. Use the numbers as a diagnostic flashlight, not a verdict — then apply your own judgment.</p>
+
+  <h3 class="serif text-2xl font-bold mt-8 mb-4">How ReadRank computes your scores</h3>
+  <p class="text-[16px] leading-relaxed mb-4">Everything happens in your browser — your text is never uploaded, stored, or sent anywhere. ReadRank splits your input into sentences, counts words, syllables (with a heuristic that handles silent e's and vowel groups), letters, and complex words (three-plus syllables, excluding proper nouns and hyphenated compounds). It then runs all five formulas and averages the three grade-level scores into one overall grade. The heatmap grades each sentence individually with Flesch-Kincaid so you can spot exactly where difficulty concentrates. The audience check, worst-sentence splitter, revision comparator, and synonym suggester all build on the same transparent math — no black boxes, no AI guessing, just the classic formulas applied thoroughly.</p>
+  <p class="text-[16px] leading-relaxed mb-4">Whether you are polishing a blog post, simplifying a legal notice, writing documentation, or helping a student with an essay, a good Flesch Kincaid calculator paired with sentence-level feedback turns "make it clearer" from vague advice into a concrete, measurable task. Paste your draft above, find your red sentences, split them, swap the jargon — and watch your grade fall while your ideas stay exactly as smart as they were.</p>
+</article>
+
+<!-- ============ FAQS ============ -->
+<section class="mx-auto max-w-3xl px-4 sm:px-6 pb-12">
+  <h2 class="serif text-3xl font-bold mb-6 text-center">Frequently asked questions</h2>
+  <div class="space-y-3">
+    <details class="faq card rounded-xl p-5">
+      <summary class="font-semibold">What is a readability checker?</summary>
+      <p class="text-sm mt-3 leading-relaxed" style="color:#57534e;">A readability checker is a tool that analyzes your writing and estimates how easy or difficult it is to read. It counts sentence length, word length, and syllables, then applies established formulas — such as Flesch Reading Ease or Flesch-Kincaid — to produce a score or grade level. Writers use it to make sure their text matches their audience, from children's books (grade 5 and below) to general web content (around grade 8).</p>
+    </details>
+    <details class="faq card rounded-xl p-5">
+      <summary class="font-semibold">How is the Flesch-Kincaid grade level calculated?</summary>
+      <p class="text-sm mt-3 leading-relaxed" style="color:#57534e;">The Flesch-Kincaid Grade Level uses the formula: 0.39 × (words ÷ sentences) + 11.8 × (syllables ÷ words) − 15.59. The result maps to US school grades — a score of 8.0 means an average eighth-grader should understand the text. Longer sentences and longer words both push the grade higher, which is why splitting sentences and swapping long words are the two fastest ways to lower it.</p>
+    </details>
+    <details class="faq card rounded-xl p-5">
+      <summary class="font-semibold">What is a good Flesch Reading Ease score?</summary>
+      <p class="text-sm mt-3 leading-relaxed" style="color:#57534e;">Flesch Reading Ease runs from 0 to 100, where higher is easier. Aim for 90–100 for young readers, 60–70 for general audiences (the "standard" plain-English band), and 50–60 for fairly difficult material. Scores below 30 indicate very difficult, academic-level text. Most professional copywriters target 60–70 because that band is comfortable for roughly 80% of adult readers.</p>
+    </details>
+    <details class="faq card rounded-xl p-5">
+      <summary class="font-semibold">What is the difference between Gunning Fog, SMOG, and Coleman-Liau?</summary>
+      <p class="text-sm mt-3 leading-relaxed" style="color:#57534e;">All three output a grade level but measure different things. Gunning Fog counts "complex words" (3+ syllables) and estimates years of schooling needed — it punishes jargon hardest. SMOG uses polysyllable density alone and is considered the most accurate for health and safety materials, but needs about 30 sentences to stabilize. Coleman-Liau counts letters instead of syllables, making it fast and slightly stricter on technical terms. ReadRank shows all three so you can trust their consensus.</p>
+    </details>
+    <details class="faq card rounded-xl p-5">
+      <summary class="font-semibold">How accurate is an online reading level checker on short text?</summary>
+      <p class="text-sm mt-3 leading-relaxed" style="color:#57534e;">Short samples produce noisier scores because one unusual sentence swings the averages. As a rule of thumb, 100+ words gives reasonably stable Flesch-Kincaid and Coleman-Liau scores, while SMOG really wants around 30 sentences. For short snippets, focus on the per-sentence heatmap rather than the document totals — it shows exactly which sentences are hard regardless of sample size.</p>
+    </details>
+    <details class="faq card rounded-xl p-5">
+      <summary class="font-semibold">How can I improve my readability score quickly?</summary>
+      <p class="text-sm mt-3 leading-relaxed" style="color:#57534e;">Split your longest sentences first — one 40-word sentence cut in two can drop a full grade level with no meaning lost. Then replace Latinate verbs with plain ones: "utilize" → "use", "facilitate" → "help", "approximately" → "about". Finally, prefer active voice and concrete nouns. Use ReadRank's worst-sentence diagnosis and revision compare to measure each pass; most writers cut 2–3 grade levels in three editing rounds.</p>
+    </details>
+  </div>
+</section>
+
+<!-- ============ JSON-LD ============ -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    { "@type": "Question", "name": "What is a readability checker?", "acceptedAnswer": { "@type": "Answer", "text": "A readability checker analyzes your writing and estimates how easy or difficult it is to read, using formulas such as Flesch Reading Ease or Flesch-Kincaid to produce a score or grade level matched to an audience." } },
+    { "@type": "Question", "name": "How is the Flesch-Kincaid grade level calculated?", "acceptedAnswer": { "@type": "Answer", "text": "Flesch-Kincaid Grade = 0.39 × (words ÷ sentences) + 11.8 × (syllables ÷ words) − 15.59. The result maps to US school grades; 8.0 means an average eighth-grader should understand the text." } },
+    { "@type": "Question", "name": "What is a good Flesch Reading Ease score?", "acceptedAnswer": { "@type": "Answer", "text": "Aim for 90–100 for young readers, 60–70 for general audiences (standard plain English), 50–60 for fairly difficult material, and expect below 30 for very difficult academic text." } },
+    { "@type": "Question", "name": "What is the difference between Gunning Fog, SMOG, and Coleman-Liau?", "acceptedAnswer": { "@type": "Answer", "text": "Gunning Fog counts complex words to estimate schooling needed; SMOG uses polysyllable density and suits health materials but needs ~30 sentences; Coleman-Liau counts letters instead of syllables. All three output grade levels." } },
+    { "@type": "Question", "name": "How accurate is an online reading level checker on short text?", "acceptedAnswer": { "@type": "Answer", "text": "Short samples are noisier. 100+ words stabilizes Flesch-Kincaid and Coleman-Liau; SMOG wants ~30 sentences. For snippets, rely on the per-sentence heatmap instead of document totals." } },
+    { "@type": "Question", "name": "How can I improve my readability score quickly?", "acceptedAnswer": { "@type": "Answer", "text": "Split long sentences, replace Latinate verbs with plain ones (utilize → use), and prefer active voice. Most writers cut 2–3 grade levels in three measured editing passes." } }
+  ]
+}
+</script>
+
+<footer class="border-t hairline">
+  <div class="mx-auto max-w-6xl px-4 sm:px-6 py-8 flex flex-col sm:flex-row items-center justify-between gap-3 text-sm" style="color:#a8a29e;">
+    <span class="serif font-bold text-base" style="color:#0d9488;">ReadRank</span>
+    <span>Free readability checker · Flesch-Kincaid calculator · Reading level checker</span>
+    <nav class="flex gap-5 font-medium">
+      <a href="#top" class="hover:opacity-70">Home</a>
+      <a href="https://fixoraa.tech" class="hover:opacity-70">More Tools</a>
+    </nav>
+  </div>
+</footer>
+
+<script id="v3-readrank-readability-analyzer-lib">
+/* ReadRank readability analyzer — PURE logic only.
+   No DOM globals, no storage access. Safe to eval in Node or browser.
+   Formulas: Flesch Reading Ease, Flesch-Kincaid Grade, Gunning Fog, SMOG, Coleman-Liau. */
+
+function rrRound1(n) { return Math.round(n * 10) / 10; }
+function rrRound2(n) { return Math.round(n * 100) / 100; }
+function rrClamp(n, lo, hi) { return Math.min(hi, Math.max(lo, n)); }
+
+/* ---------- tokenizers ---------- */
+
+function rrTokenizeWords(text) {
+  var m = String(text == null ? '' : text).toLowerCase().match(/[a-z]+(?:'[a-z]+)?/g);
+  return m || [];
+}
+
+// words with original casing (for proper-noun detection in Gunning Fog)
+function rrTokenizeRawWords(text) {
+  var m = String(text == null ? '' : text).match(/[A-Za-z]+(?:'[A-Za-z]+)?(?:-[A-Za-z]+)*/g);
+  return m || [];
+}
+
+function rrSplitSentences(text) {
+  var t = String(text == null ? '' : text).replace(/\s+/g, ' ').trim();
+  if (!t) return [];
+  var out = [];
+  var re = /[^.!?…]+[.!?…]+/g, m, last = 0;
+  while ((m = re.exec(t)) !== null) {
+    if (m[0].trim()) out.push(m[0].trim());
+    last = re.lastIndex;
+  }
+  var rest = t.slice(last).trim();
+  if (rest) out.push(rest);
+  return out;
+}
+
+function rrCountLetters(text) {
+  var m = String(text == null ? '' : text).match(/[a-zA-Z]/g);
+  return m ? m.length : 0;
+}
+
+/* ---------- syllables ---------- */
+
+function rrCountSyllables(word) {
+  var w = String(word == null ? '' : word).toLowerCase().replace(/[^a-z]/g, '');
+  if (!w) return 0;
+  if (w.length <= 3) return 1;
+  // strip common silent endings before counting vowel groups
+  w = w.replace(/e$/, '');
+  if (/[^aeiouy]le$/.test(w)) { /* keep the 'le' syllable, e.g. "table" */ }
+  var groups = w.match(/[aeiouy]+/g);
+  var n = groups ? groups.length : 0;
+  if (n === 0) return 1; // e.g. "rhythm"
+  return n;
+}
+
+// Gunning Fog "complex word": 3+ syllables, not a proper noun, not a hyphenated
+// compound, and not made 3-syllable only by an -ed/-es inflection.
+function rrIsComplexWord(rawWord) {
+  var w = String(rawWord == null ? '' : rawWord).replace(/[^a-zA-Z-]/g, '');
+  if (!w || w.indexOf('-') !== -1) return false;
+  if (/^[A-Z]/.test(rawWord)) return false; // proper noun heuristic
+  if (rrCountSyllables(w) < 3) return false;
+  var base = w.replace(/(es|ed)$/i, '');
+  if (base !== w && rrCountSyllables(base) < 3) return false;
+  return true;
+}
+
+/* ---------- core analysis ---------- */
+
+function rrAnalyzeText(text) {
+  var sentences = rrSplitSentences(text);
+  var words = rrTokenizeWords(text);
+  var rawWords = rrTokenizeRawWords(text);
+  var nW = words.length, nS = sentences.length;
+
+  var syllables = 0, complex = 0, polys = 0;
+  for (var i = 0; i < words.length; i++) {
+    var syl = rrCountSyllables(words[i]);
+    syllables += syl;
+    if (syl >= 3) polys++;
+  }
+  for (var j = 0; j < rawWords.length; j++) {
+    if (rrIsComplexWord(rawWords[j])) complex++;
+  }
+
+  var result = {
+    ok: nW > 0,
+    empty: nW === 0,
+    words: nW,
+    sentences: nS,
+    characters: rrCountLetters(text),
+    syllables: syllables,
+    complexWords: complex,
+    polysyllables: polys,
+    avgWordsPerSentence: nS ? rrRound2(nW / nS) : 0,
+    avgSyllablesPerWord: nW ? rrRound2(syllables / nW) : 0,
+    fleschEase: null, fkGrade: null, gunningFog: null, smog: null, colemanLiau: null,
+    overallGrade: null
+  };
+  if (!nW) return result;
+
+  var asl = nW / Math.max(nS, 1);          // avg sentence length
+  var asw = syllables / nW;               // avg syllables per word
+  var L = (rrCountLetters(text) / nW) * 100;      // letters per 100 words
+  var S = (Math.max(nS, 1) / nW) * 100;          // sentences per 100 words
+
+  result.fleschEase  = rrRound1(rrClamp(206.835 - 1.015 * asl - 84.6 * asw, 0, 100));
+  result.fkGrade     = rrRound1(rrClamp(0.39 * asl + 11.8 * asw - 15.59, 0, 20));
+  result.gunningFog  = rrRound1(rrClamp(0.4 * (asl + 100 * (complex / nW)), 0, 20));
+  // SMOG needs 30+ sentences to be strictly valid; still computed with a floor.
+  result.smog        = rrRound1(rrClamp(1.043 * Math.sqrt(polys * (30 / Math.max(nS, 1))) + 3.1291, 0, 20));
+  result.colemanLiau = rrRound1(rrClamp(0.0588 * L - 0.296 * S - 15.8, 0, 20));
+
+  result.overallGrade = rrRound1((result.fkGrade + result.gunningFog + result.colemanLiau) / 3);
+  return result;
+}
+
+/* ---------- per-sentence heatmap + worst sentence ---------- */
+
+function rrSentenceGrades(text) {
+  var sentences = rrSplitSentences(text);
+  return sentences.map(function (s) {
+    var a = rrAnalyzeText(s);
+    return {
+      sentence: s,
+      words: a.words,
+      grade: a.words ? a.fkGrade : 0,   // Flesch-Kincaid grade per sentence
+      ease: a.words ? a.fleschEase : 100,
+      complexWords: a.complexWords
+    };
+  });
+}
+
+function rrWorstSentence(text) {
+  var rows = rrSentenceGrades(text);
+  if (!rows.length) return null;
+  var worst = rows[0];
+  for (var i = 1; i < rows.length; i++) {
+    if (rows[i].grade > worst.grade) worst = rows[i];
+  }
+  return {
+    sentence: worst.sentence,
+    grade: worst.grade,
+    words: worst.words,
+    suggestion: rrSplitSuggestion(worst.sentence)
+  };
+}
+
+// Suggest splitting a long sentence into two easier halves.
+// Returns up to 2 candidate splits scored by predicted max half-grade.
+function rrSplitSuggestion(sentence) {
+  var s = String(sentence || '').trim();
+  if (!s) return [];
+  var cands = [];
+
+  function trySplit(at, kind) {
+    var p1 = s.slice(0, at).trim().replace(/[,;:]+$/, '');
+    var p2 = s.slice(at).trim().replace(/^[,;\s:]+/, '');
+    if (!p1 || !p2) return;
+    var w1 = rrTokenizeWords(p1).length, w2 = rrTokenizeWords(p2).length;
+    if (w1 < 3 || w2 < 3) return; // avoid silly fragments
+    var g1 = rrAnalyzeText(p1).fkGrade, g2 = rrAnalyzeText(p2).fkGrade;
+    cands.push({
+      kind: kind, part1: p1, part2: p2,
+      grade1: g1, grade2: g2,
+      maxGrade: Math.max(g1, g2),
+      balance: Math.abs(w1 - w2) / (w1 + w2) // 0 = perfectly balanced
+    });
+  }
+
+  // 1) strong separators first
+  var strong = s.search(/;|:/);
+  if (strong > 0) trySplit(strong + 1, 'semicolon');
+
+  // 2) conjunctions / subordinators closest to the middle
+  var mid = s.length / 2;
+  var joins = [' and ', ' but ', ' or ', ' yet ', ' so ', ' nor ',
+               ', which ', ', that ', ' which ', ' that ', ' because ',
+               ' although ', ' though ', ' while ', ', and ', ', but '];
+  var best = null, bestDist = Infinity;
+  for (var i = 0; i < joins.length; i++) {
+    var idx = s.toLowerCase().indexOf(joins[i]);
+    while (idx !== -1) {
+      var d = Math.abs(idx - mid);
+      if (d < bestDist) { bestDist = d; best = { at: idx + joins[i].length, kind: 'conjunction' }; }
+      idx = s.toLowerCase().indexOf(joins[i], idx + 1);
+    }
+  }
+  if (best) trySplit(best.at, best.kind);
+
+  // 3) plain comma near the middle
+  var commaIdx = -1, cd = Infinity;
+  for (var c = s.indexOf(','); c !== -1; c = s.indexOf(',', c + 1)) {
+    var dd = Math.abs(c - mid);
+    if (dd < cd) { cd = dd; commaIdx = c; }
+  }
+  if (commaIdx > 0) trySplit(commaIdx + 1, 'comma');
+
+  cands.sort(function (a, b) {
+    return (a.maxGrade - b.maxGrade) || (a.balance - b.balance);
+  });
+  return cands.slice(0, 2);
+}
+
+/* ---------- labels ---------- */
+
+function rrEaseLabel(ease) {
+  if (ease >= 90) return 'Very easy';
+  if (ease >= 80) return 'Easy';
+  if (ease >= 70) return 'Fairly easy';
+  if (ease >= 60) return 'Standard';
+  if (ease >= 50) return 'Fairly difficult';
+  if (ease >= 30) return 'Difficult';
+  return 'Very difficult';
+}
+
+function rrGradeLevel(grade) {
+  if (grade < 1) return 'Below 1st grade';
+  if (grade <= 5) return 'Elementary';
+  if (grade <= 8) return 'Middle school';
+  if (grade <= 12) return 'High school';
+  if (grade <= 16) return 'College';
+  return 'Graduate level';
+}
+
+// heat band for the heatmap: 0 easy -> 4 hard
+function rrHeatBand(grade) {
+  if (grade <= 5) return 0;
+  if (grade <= 8) return 1;
+  if (grade <= 11) return 2;
+  if (grade <= 14) return 3;
+  return 4;
+}
+
+/* ---------- audience presets ---------- */
+
+function rrAudiencePresets() {
+  return [
+    { id: 'kids',     name: 'Kids (ages 7–10)',   min: 1,  max: 5,  blurb: 'Short words, short sentences. Picture-book and early-reader territory.' },
+    { id: 'web',      name: 'General web readers', min: 6, max: 9,  blurb: 'The classic target: aim for grade 8 so ~80% of adults read with ease.' },
+    { id: 'news',     name: 'News & blogs',        min: 6,  max: 10, blurb: 'Skimmable and quotable. Most major news sites land here.' },
+    { id: 'business', name: 'Business & B2B',      min: 9,  max: 12, blurb: 'Professional but plain. No jargon tax on busy readers.' },
+    { id: 'academic', name: 'Academic & technical', min: 12, max: 16, blurb: 'Specialist vocabulary is fine — but clarity still wins citations.' }
+  ];
+}
+
+function rrAudienceVerdict(grade, presetId) {
+  var presets = rrAudiencePresets();
+  var p = null;
+  for (var i = 0; i < presets.length; i++) {
+    if (presets[i].id === presetId) { p = presets[i]; break; }
+  }
+  if (!p || typeof grade !== 'number' || isNaN(grade)) return null;
+  var verdict = grade < p.min ? 'below' : (grade > p.max ? 'above' : 'on-target');
+  return { preset: p, grade: grade, verdict: verdict };
+}
+
+/* ---------- complex word -> simpler synonym ---------- */
+
+var RR_SYNONYMS = {
+  'utilize': 'use', 'facilitate': 'help', 'commence': 'start', 'purchase': 'buy',
+  'sufficient': 'enough', 'numerous': 'many', 'approximately': 'about',
+  'demonstrate': 'show', 'implement': 'put in place', 'require': 'need',
+  'regarding': 'about', 'however': 'but', 'additionally': 'also',
+  'consequently': 'so', 'furthermore': 'also', 'moreover': 'also',
+  'nevertheless': 'still', 'therefore': 'so', 'obtain': 'get',
+  'maintain': 'keep', 'indicate': 'show', 'provide': 'give', 'assist': 'help',
+  'attempt': 'try', 'prior': 'before', 'subsequent': 'later', 'individual': 'person',
+  'encounter': 'meet', 'significant': 'big', 'various': 'many', 'adequate': 'enough',
+  'comprehend': 'understand', 'eliminate': 'remove', 'enhance': 'improve',
+  'establish': 'set up', 'fundamental': 'basic', 'generate': 'make',
+  'identify': 'find', 'immediate': 'quick', 'initial': 'first', 'inquire': 'ask',
+  'modify': 'change', 'objective': 'goal', 'observe': 'watch', 'participate': 'join',
+  'perceive': 'see', 'possess': 'have', 'prefer': 'like', 'prepare': 'get ready',
+  'presently': 'now', 'prevent': 'stop', 'primary': 'main', 'proceed': 'go',
+  'produce': 'make', 'receive': 'get', 'reduce': 'cut', 'remain': 'stay',
+  'request': 'ask', 'reside': 'live', 'resolve': 'fix', 'respond': 'answer',
+  'select': 'pick', 'specific': 'exact', 'terminate': 'end', 'transform': 'change',
+  'transmit': 'send', 'ultimate': 'final', 'verify': 'check', 'accurate': 'exact',
+  'allocate': 'give out', 'anticipate': 'expect', 'apparent': 'clear',
+  'assemble': 'put together', 'attain': 'reach', 'conclude': 'end',
+  'considerable': 'large', 'construct': 'build', 'consume': 'use up',
+  'contribute': 'give', 'convey': 'tell', 'depart': 'leave', 'detect': 'find',
+  'determine': 'find out', 'diminish': 'shrink', 'discover': 'find',
+  'display': 'show', 'distribute': 'hand out', 'duplicate': 'copy',
+  'duration': 'length', 'economical': 'cheap', 'eligible': 'allowed',
+  'emphasize': 'stress', 'employ': 'use', 'enable': 'let', 'endeavor': 'try',
+  'enormous': 'huge', 'ensure': 'make sure', 'entire': 'whole', 'essential': 'key',
+  'evaluate': 'judge', 'exceed': 'pass', 'exclude': 'leave out', 'execute': 'do',
+  'expand': 'grow', 'expedite': 'speed up', 'experience': 'go through',
+  'explore': 'look into', 'extend': 'stretch', 'extensive': 'wide', 'exterior': 'outside',
+  'fabricate': 'make up', 'feasible': 'doable', 'frustrate': 'annoy',
+  'fulfill': 'meet', 'function': 'job', 'gigantic': 'huge', 'hazardous': 'risky',
+  'illustrate': 'show', 'immense': 'huge', 'immerse': 'soak', 'impact': 'hit/affect',
+  'impair': 'harm', 'impetus': 'push', 'inception': 'start', 'incision': 'cut',
+  'incorporate': 'include', 'increase': 'grow', 'induce': 'cause', 'inform': 'tell',
+  'initiate': 'start', 'innovative': 'new', 'input': 'put in', 'insert': 'put in',
+  'inspect': 'check', 'install': 'set up', 'instance': 'case', 'integrate': 'join',
+  'intelligent': 'smart', 'intend': 'plan', 'intense': 'strong', 'interact': 'talk with',
+  'interface': 'join/link', 'intervene': 'step in', 'intricate': 'complex', 'inventory': 'stock',
+  'investigate': 'look into', 'involve': 'take part', 'isolate': 'separate',
+  'jubilant': 'happy', 'laceration': 'cut', 'lament': 'mourn', 'lavish': 'fancy',
+  'leverage': 'use', 'liberate': 'free', 'locate': 'find', 'magnify': 'enlarge',
+  'magnitude': 'size', 'mandatory': 'must-do', 'manifest': 'show', 'manufacture': 'make',
+  'maximize': 'grow', 'mediate': 'step in', 'methodology': 'method',
+  'migrate': 'move', 'minimize': 'shrink', 'misinterpret': 'get wrong',
+  'mitigate': 'ease', 'modulate': 'adjust', 'monitor': 'watch', 'narrate': 'tell',
+  'necessitate': 'need', 'negotiate': 'talk out', 'nominate': 'name',
+  'notify': 'tell', 'notion': 'idea', 'novice': 'newcomer', 'nurture': 'help grow',
+  'obfuscate': 'hide', 'obliterate': 'wipe out', 'obscure': 'unclear', 'obsolete': 'old',
+  'obstacle': 'block', 'obstruct': 'block', 'occlude': 'block', 'occupy': 'fill',
+  'occur': 'happen', 'offspring': 'kids', 'omit': 'skip', 'opaque': 'not clear',
+  'operate': 'run', 'opportunity': 'chance', 'oppose': 'fight', 'optimum': 'best',
+  'option': 'choice', 'orchestrate': 'plan', 'originate': 'start', 'oscillate': 'swing',
+  'ostensibly': 'seems', 'outcome': 'result', 'outlandish': 'odd', 'output': 'put out',
+  'overwhelm': 'swamp', 'pacify': 'calm', 'palatable': 'tasty', 'paradigm': 'model',
+  'parallel': 'side by side', 'paraphrase': 'reword', 'pardon': 'forgive',
+  'participation': 'taking part', 'particular': 'exact', 'passionate': 'eager',
+  'pathology': 'disease', 'penultimate': 'next to last', 'perceive': 'see',
+  'perforate': 'poke', 'perfunctory': 'hasty', 'perilous': 'risky', 'perimeter': 'edge',
+  'periphery': 'edge', 'permeate': 'spread through', 'perpetuate': 'keep going',
+  'persevere': 'keep going', 'persist': 'keep going', 'perspire': 'sweat',
+  'pertinent': 'fitting', 'perturb': 'upset', 'peruse': 'read', 'pervasive': 'all over',
+  'phenomenon': 'event', 'pinnacle': 'top', 'placate': 'calm', 'plentiful': 'lots',
+  'ponder': 'think', 'portable': 'handy', 'portion': 'part', 'portray': 'show',
+  'postpone': 'put off', 'potent': 'strong', 'potential': 'possible',
+  'pragmatic': 'down to earth', 'precede': 'go before', 'precipitate': 'bring on',
+  'precise': 'exact', 'preclude': 'stop', 'predicament': 'mess', 'predict': 'guess',
+  'predominant': 'main', 'preface': 'intro', 'prejudice': 'bias', 'preliminary': 'first',
+  'premature': 'early', 'premeditate': 'plan', 'preoccupy': 'busy', 'preposterous': 'silly',
+  'prerequisite': 'must-have', 'prescribe': 'order', 'preserve': 'keep',
+  'preside': 'lead', 'prestigious': 'famed', 'presume': 'guess', 'pretentious': 'showy',
+  'prevail': 'win', 'prevalent': 'common', 'procrastinate': 'put off',
+  'proficient': 'skilled', 'profound': 'deep', 'prohibit': 'ban', 'proliferate': 'spread',
+  'prolong': 'stretch', 'prominent': 'well-known', 'promulgate': 'spread',
+  'propensity': 'leaning', 'propitious': 'lucky', 'proportion': 'share',
+  'proposition': 'offer', 'proprietary': 'owned', 'proscribe': 'ban',
+  'prosecute': 'sue', 'prosper': 'thrive', 'protract': 'drag out', 'protrude': 'stick out',
+  'protuberance': 'bump', 'prowess': 'skill', 'proximity': 'nearness',
+  'prudent': 'careful', 'pugnacious': 'mean', 'punitive': 'harsh',
+  'purchase': 'buy', 'purport': 'claim', 'pursue': 'chase', 'purvey': 'sell',
+  'putrefy': 'rot', 'quandary': 'dilemma', 'quell': 'calm', 'query': 'ask',
+  'quiescent': 'still', 'quintessential': 'classic', 'radiate': 'give off',
+  'radical': 'extreme', 'ramification': 'result', 'rampant': 'wild',
+  'rancor': 'hate', 'ratify': 'okay', 'rationale': 'reason', 'ravage': 'wreck',
+  'recalcitrant': 'stubborn', 'recapitulate': 'sum up', 'recede': 'pull back',
+  'receptacle': 'holder', 'recess': 'break', 'reciprocate': 'return',
+  'reclaim': 'take back', 'recline': 'lean back', 'recoil': 'flinch',
+  'recollect': 'recall', 'reconcile': 'make up', 'recondite': 'deep',
+  'recourse': 'help', 'rectify': 'fix', 'recuperate': 'get well',
+  'redundant': 'extra', 'refrain': 'hold back', 'regale': 'treat',
+  'regenerate': 'renew', 'regress': 'slip back', 'regurgitate': 'repeat',
+  'rehabilitate': 'fix up', 'reimburse': 'pay back', 'reinforce': 'back up',
+  'reiterate': 'repeat', 'rejuvenate': 'freshen', 'relapse': 'slip back',
+  'relinquish': 'give up', 'relish': 'enjoy', 'relocate': 'move',
+  'reluctant': 'unwilling', 'reminisce': 'recall', 'remonstrate': 'argue',
+  'remunerate': 'pay', 'render': 'give', 'rendezvous': 'meet', 'renounce': 'give up',
+  'renovate': 'fix up', 'repatriate': 'send home', 'repel': 'push back',
+  'repent': 'regret', 'repercussion': 'result', 'replenish': 'refill',
+  'replete': 'full', 'replicate': 'copy', 'repose': 'rest', 'reprehend': 'scold',
+  'represent': 'stand for', 'repress': 'hold down', 'reprieve': 'break',
+  'reprimand': 'scold', 'reproach': 'blame', 'reprobate': 'crook',
+  'repudiate': 'reject', 'repugnant': 'gross', 'repulse': 'push back',
+  'requisite': 'needed', 'rescind': 'cancel', 'resemble': 'look like',
+  'resent': 'dislike', 'reserve': 'keep', 'reside': 'live', 'resilient': 'tough',
+  'resolute': 'firm', 'resonate': 'ring true', 'respite': 'break',
+  'resplendent': 'dazzling', 'restitution': 'payback', 'restrain': 'hold back',
+  'restrict': 'limit', 'resultant': 'coming from', 'resume': 'start again',
+  'resurgent': 'rising', 'resurrect': 'bring back', 'retain': 'keep',
+  'retaliate': 'hit back', 'retard': 'slow', 'reticent': 'quiet',
+  'retort': 'snap back', 'retract': 'take back', 'retreat': 'pull back',
+  'retrench': 'cut back', 'retrieve': 'get back', 'retrograde': 'going back',
+  'reveal': 'show', 'revel': 'enjoy', 'revere': 'honor', 'revile': 'hate',
+  'revise': 'fix', 'revitalize': 'freshen', 'revoke': 'cancel',
+  'rhapsodize': 'rave', 'rhetoric': 'talk', 'rigorous': 'tough',
+  'rotund': 'round', 'ruminate': 'think', 'rupture': 'break',
+  'sagacious': 'wise', 'salient': 'key', 'salubrious': 'healthy',
+  'salutary': 'good', 'sanction': 'okay', 'sanguine': 'upbeat',
+  'satiate': 'fill', 'saturate': 'soak', 'saunter': 'stroll', 'savor': 'enjoy',
+  'scintillate': 'sparkle', 'scope': 'range', 'scrupulous': 'careful',
+  'scrutinize': 'study', 'secrete': 'hide', 'sedate': 'calm', 'sedentary': 'sitting',
+  'sedulous': 'hard-working', 'seethe': 'boil', 'segment': 'part',
+  'segregate': 'separate', 'seismic': 'huge', 'seize': 'grab', 'seminal': 'key',
+  'semblance': 'look', 'senile': 'old', 'sensation': 'feeling',
+  'sensitize': 'alert', 'sentient': 'aware', 'sequester': 'lock away',
+  'serene': 'calm', 'serpentine': 'winding', 'serrated': 'jagged',
+  'servile': 'cringing', 'sever': 'cut', 'shackle': 'chain', 'sham': 'fake',
+  'shirk': 'dodge', 'shoddy': 'cheap', 'shrewd': 'smart', 'shrill': 'sharp',
+  'shroud': 'cover', 'shun': 'avoid', 'sibilant': 'hissy', 'simper': 'smirk',
+  'simulate': 'fake', 'simultaneous': 'at once', 'sinecure': 'easy job',
+  'sinuous': 'winding', 'sip': 'drink', 'siren': 'alarm', 'slander': 'smear',
+  'slothful': 'lazy', 'slovenly': 'messy', 'smolder': 'burn', 'snide': 'mean',
+  'solicit': 'ask for', 'solicitous': 'caring', 'solidify': 'harden',
+  'soliloquy': 'speech', 'solitary': 'alone', 'somber': 'gloomy',
+  'somnolent': 'sleepy', 'sonorous': 'deep', 'sophistry': 'trick',
+  'soporific': 'sleepy', 'sordid': 'dirty', 'sovereign': 'ruler',
+  'spartan': 'plain', 'specious': 'fake', 'spectrum': 'range',
+  'speculate': 'guess', 'spendthrift': 'waster', 'spherical': 'round',
+  'spontaneous': 'offhand', 'sporadic': 'spotty', 'spurious': 'fake',
+  'squander': 'waste', 'stagnant': 'still', 'staid': 'serious',
+  'stalwart': 'strong', 'stanza': 'verse', 'static': 'still',
+  'stature': 'height', 'steadfast': 'firm', 'stentorian': 'loud',
+  'stifle': 'smother', 'stigma': 'shame', 'stilted': 'stiff',
+  'stimulate': 'spark', 'stipulate': 'say', 'stoic': 'calm',
+  'stolid': 'dull', 'stratagem': 'trick', 'stratum': 'layer',
+  'strident': 'harsh', 'strife': 'fight', 'stringent': 'strict',
+  'stultify': 'dull', 'stupefy': 'shock', 'stupor': 'daze',
+  'subjugate': 'beat', 'sublime': 'grand', 'submerge': 'sink',
+  'subordinate': 'under', 'subsequent': 'later', 'subside': 'die down',
+  'subsidiary': 'side', 'subsidize': 'fund', 'subsist': 'get by',
+  'substantial': 'big', 'substantiate': 'back up', 'subterfuge': 'trick',
+  'subtle': 'slight', 'subtract': 'take away', 'subvert': 'ruin',
+  'succeed': 'win', 'succinct': 'short', 'succor': 'help', 'succumb': 'give in',
+  'suffice': 'do', 'suffocate': 'choke', 'suffuse': 'spread',
+  'sumptuous': 'fancy', 'sunder': 'split', 'supercilious': 'snooty',
+  'superficial': 'shallow', 'superfluous': 'extra', 'supplant': 'replace',
+  'supple': 'bendy', 'supplicate': 'beg', 'surfeit': 'too much',
+  'surmise': 'guess', 'surmount': 'beat', 'surpass': 'beat',
+  'surreptitious': 'sneaky', 'surrogate': 'stand-in', 'sustain': 'keep up',
+  'swarthy': 'dark', 'sybarite': 'pleasure-seeker', 'sycophant': 'flatterer',
+  'synthesize': 'combine', 'tacit': 'silent', 'taciturn': 'quiet',
+  'tactile': 'touch', 'talisman': 'charm', 'tangible': 'real',
+  'tantalize': 'tease', 'tantamount': 'same as', 'taper': 'narrow',
+  'tardy': 'late', 'tawdry': 'cheap', 'tedious': 'boring', 'temerity': 'nerve',
+  'temper': 'calm', 'tempestuous': 'stormy', 'temporal': 'time',
+  'tenacious': 'tough', 'tendentious': 'biased', 'tenet': 'rule',
+  'terse': 'short', 'testy': 'grumpy', 'tether': 'tie', 'theoretical': 'in theory',
+  'thwart': 'block', 'tirade': 'rant', 'titillate': 'tease', 'tithe': 'tenth',
+  'titular': 'in name', 'toady': 'flatterer', 'tome': 'big book',
+  'torpid': 'slow', 'torpor': 'daze', 'torrent': 'flood', 'tortuous': 'twisty',
+  'tout': 'plug', 'tractable': 'easy', 'tranquil': 'calm', 'transcend': 'go beyond',
+  'transcribe': 'copy out', 'transfigure': 'change', 'transfix': 'hold still',
+  'transgress': 'break', 'transient': 'brief', 'transitory': 'brief',
+  'translucent': 'see-through', 'transmute': 'change', 'transparent': 'clear',
+  'traverse': 'cross', 'travesty': 'joke', 'treacherous': 'risky',
+  'trepidation': 'fear', 'tribute': 'honor', 'trite': 'stale', 'triumph': 'win',
+  'trivial': 'small', 'truculent': 'mean', 'truncate': 'cut short',
+  'tumult': 'uproar', 'tumultuous': 'wild', 'turbid': 'muddy',
+  'turbulent': 'wild', 'turgid': 'puffy', 'turpitude': 'evil',
+  'tutelage': 'care', 'tyro': 'newcomer', 'ubiquitous': 'everywhere',
+  'ulterior': 'hidden', 'umbrage': 'offense', 'unadorned': 'plain',
+  'uncanny': 'eerie', 'unctuous': 'oily', 'undermine': 'weaken',
+  'underscore': 'stress', 'undulate': 'wave', 'unearth': 'dig up',
+  'unequivocal': 'clear', 'unfathomable': 'deep', 'unflagging': 'steady',
+  'unfettered': 'free', 'uniform': 'same', 'unify': 'join',
+  'unimpeachable': 'solid', 'unobtrusive': 'quiet', 'unprecedented': 'first-ever',
+  'unruly': 'wild', 'unscathed': 'unhurt', 'unscrupulous': 'crooked',
+  'unseemly': 'tacky', 'unsullied': 'clean', 'untenable': 'weak',
+  'untoward': 'bad', 'unwitting': 'unknowing', 'upbraid': 'scold',
+  'urbane': 'smooth', 'utilitarian': 'plain', 'utopia': 'dream land',
+  'vacillate': 'waver', 'vacuous': 'empty', 'vagary': 'whim',
+  'vainglorious': 'vain', 'valiant': 'brave', 'validate': 'prove',
+  'vanquish': 'beat', 'vapid': 'dull', 'variance': 'change',
+  'variegated': 'mixed', 'veer': 'turn', 'venerable': 'honored',
+  'venerate': 'honor', 'vengeful': 'spiteful', 'veracity': 'truth',
+  'verbose': 'wordy', 'verdant': 'green', 'verisimilitude': 'realism',
+  'vernacular': 'slang', 'versatile': 'handy', 'vestige': 'trace',
+  'vex': 'annoy', 'viable': 'workable', 'vicarious': 'second-hand',
+  'vicissitude': 'ups and downs', 'vigilant': 'watchful', 'vignette': 'sketch',
+  'vilify': 'smear', 'vindicate': 'clear', 'vindictive': 'spiteful',
+  'virtuoso': 'master', 'virulent': 'nasty', 'visage': 'face',
+  'viscous': 'thick', 'vitriol': 'hate', 'vituperate': 'scold',
+  'vivacious': 'lively', 'vivid': 'bright', 'vociferous': 'loud',
+  'volatile': 'unstable', 'volition': 'will', 'voluble': 'chatty',
+  'voracious': 'greedy', 'vortex': 'swirl', 'vouchsafe': 'grant',
+  'voyage': 'trip', 'wallow': 'roll', 'wan': 'pale', 'wanton': 'wild',
+  'wary': 'careful', 'wheedle': 'coax', 'whet': 'sharpen',
+  'whimsical': 'playful', 'winnow': 'sift', 'winsome': 'charming',
+  'wistful': 'longing', 'wizened': 'wrinkled', 'wont': 'habit',
+  'wrath': 'anger', 'wreak': 'cause', 'wrest': 'grab', 'wretched': 'miserable',
+  'xenophobia': 'fear of outsiders', 'yearn': 'long for', 'yoke': 'join',
+  'zealot': 'fanatic', 'zenith': 'top'
+};
+
+function rrSimplifyWords(text) {
+  var seen = {}, out = [];
+  var words = rrTokenizeRawWords(text);
+  for (var i = 0; i < words.length; i++) {
+    var low = words[i].toLowerCase();
+    if (RR_SYNONYMS[low] && !seen[low] && rrCountSyllables(low) >= 2) {
+      seen[low] = true;
+      out.push({
+        word: words[i],
+        syllables: rrCountSyllables(low),
+        suggestion: RR_SYNONYMS[low]
+      });
+    }
+  }
+  // hardest first
+  out.sort(function (a, b) { return b.syllables - a.syllables; });
+  return out;
+}
+
+/* ---------- revision compare ---------- */
+
+function rrCompareRevisions(original, revised) {
+  var a = rrAnalyzeText(original);
+  var b = rrAnalyzeText(revised);
+  function delta(x, y) { return (x == null || y == null) ? null : rrRound1(y - x); }
+  var d = {
+    original: a, revised: b,
+    ok: a.ok && b.ok,
+    deltaEase: delta(a.fleschEase, b.fleschEase),
+    deltaFK: delta(a.fkGrade, b.fkGrade),
+    deltaFog: delta(a.gunningFog, b.gunningFog),
+    deltaSMOG: delta(a.smog, b.smog),
+    deltaCL: delta(a.colemanLiau, b.colemanLiau),
+    deltaGrade: delta(a.overallGrade, b.overallGrade),
+    deltaWords: a.words - 0 + (b.words - a.words),
+    improved: null
+  };
+  d.deltaWords = b.words - a.words;
+  if (d.deltaGrade != null) d.improved = d.deltaGrade < 0;
+  return d;
+}
+
+</script>
+<script>
+(function () {
+  'use strict';
+  function $(id) { return document.getElementById(id); }
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+  function fmt(n) { return (n == null || isNaN(n)) ? '—' : n; }
+
+  // teal (#0d9488) -> amber (#f59e0b) -> red (#dc2626) across grade 0..16
+  function gradeColor(g) {
+    var t = Math.max(0, Math.min(16, g)) / 16;
+    var c1 = [13, 148, 136], c2 = [245, 158, 11], c3 = [220, 38, 38], c;
+    if (t < 0.5) { var u = t / 0.5; c = [c1[0] + (c2[0] - c1[0]) * u, c1[1] + (c2[1] - c1[1]) * u, c1[2] + (c2[2] - c1[2]) * u]; }
+    else { var v = (t - 0.5) / 0.5; c = [c2[0] + (c3[0] - c2[0]) * v, c2[1] + (c3[1] - c2[1]) * v, c2[2] + (c3[2] - c2[2]) * v]; }
+    return 'rgba(' + Math.round(c[0]) + ',' + Math.round(c[1]) + ',' + Math.round(c[2]) + ',0.22)';
+  }
+
+  var SAMPLE = 'The cat sat on the warm windowsill and watched the rain fall in silver sheets across the garden. ' +
+    'Contemporary interdisciplinary researchers have consistently demonstrated that the utilization of unnecessarily convoluted terminology substantially diminishes comprehension among non-specialist audiences. ' +
+    'Short sentences help. ' +
+    'When writers prioritize clarity over ostentation, their ideas travel further, persuade more effectively, and remain accessible to readers regardless of educational background or native language.';
+
+  // populate audience select
+  var audSel = $('rr-audience');
+  rrAudiencePresets().forEach(function (p) {
+    var o = document.createElement('option');
+    o.value = p.id; o.textContent = p.name + '  (grade ' + p.min + '–' + p.max + ')';
+    if (p.id === 'web') o.selected = true;
+    audSel.appendChild(o);
+  });
+
+  function renderAudience(grade) {
+    var v = rrAudienceVerdict(grade, audSel.value);
+    var box = $('rr-audience-verdict'), blurb = $('rr-audience-blurb');
+    if (!v) { box.innerHTML = ''; blurb.textContent = ''; return; }
+    blurb.textContent = v.preset.blurb;
+    if (grade == null || isNaN(grade)) { box.innerHTML = '<span style="color:#a8a29e;">Analyze text to check your audience fit.</span>'; return; }
+    if (v.verdict === 'on-target') {
+      box.innerHTML = '<span class="inline-flex items-center gap-2 text-sm font-bold px-3 py-1.5 rounded-full" style="background:#dcfce7;color:#166534;">✓ On target for ' + esc(v.preset.name) + '</span>';
+    } else if (v.verdict === 'below') {
+      box.innerHTML = '<span class="inline-flex items-center gap-2 text-sm font-bold px-3 py-1.5 rounded-full" style="background:#fef3c7;color:#92400e;">Simpler than needed — you could add depth (grade ' + grade + ' vs ' + v.preset.min + '–' + v.preset.max + ')</span>';
+    } else {
+      box.innerHTML = '<span class="inline-flex items-center gap-2 text-sm font-bold px-3 py-1.5 rounded-full" style="background:#fee2e2;color:#991b1b;">Too complex for ' + esc(v.preset.name) + ' (grade ' + grade + ' vs target ' + v.preset.min + '–' + v.preset.max + ')</span>';
+    }
+  }
+
+  function renderHeatmap(rows) {
+    var box = $('rr-heatmap');
+    if (!rows.length) { box.innerHTML = '<span style="color:#a8a29e;">Your graded sentences will appear here…</span>'; return; }
+    box.innerHTML = rows.map(function (r) {
+      return '<span class="sent" style="background:' + gradeColor(r.grade) + '" title="Grade ' + r.grade + ' · ' + r.words + ' words">'
+        + esc(r.sentence) + '</span>';
+    }).join(' ');
+  }
+
+  function renderWorst(w) {
+    var box = $('rr-worst');
+    if (!w) { box.innerHTML = '<span style="color:#a8a29e;">Analyze your text to get a diagnosis…</span>'; return; }
+    var html = '<div class="text-xs font-semibold uppercase tracking-widest mb-2" style="color:#dc2626;">Hardest sentence · grade ' + w.grade + ' · ' + w.words + ' words</div>';
+    html += '<p class="serif text-lg leading-relaxed mb-4" style="border-left:4px solid #dc2626; padding-left:1rem;">' + esc(w.sentence) + '</p>';
+    if (w.suggestion.length) {
+      html += '<div class="text-sm font-bold mb-2" style="color:#0d9488;">Suggested split — try this:</div>';
+      w.suggestion.forEach(function (s, i) {
+        html += '<div class="rounded-lg border hairline p-3 mb-2 text-sm" style="background:#faf7f0;">'
+          + '<div class="mb-1"><span class="font-bold" style="color:#0d9488;">' + (i + 1) + 'a.</span> ' + esc(s.part1) + '. <span class="text-xs font-semibold" style="color:#78716c;">(grade ' + s.grade1 + ')</span></div>'
+          + '<div><span class="font-bold" style="color:#0d9488;">' + (i + 1) + 'b.</span> ' + esc(s.part2) + ' <span class="text-xs font-semibold" style="color:#78716c;">(grade ' + s.grade2 + ')</span></div>'
+          + '<div class="text-xs mt-1" style="color:#a8a29e;">Split at ' + esc(s.kind) + ' · hardest half drops to grade ' + s.maxGrade + '</div></div>';
+      });
+    } else {
+      html += '<p class="text-sm" style="color:#78716c;">This sentence is already short — no clean split point found. Try swapping long words instead.</p>';
+    }
+    box.innerHTML = html;
+  }
+
+  function renderSynonyms(list) {
+    var box = $('rr-synonyms');
+    if (!list.length) { box.innerHTML = '<span style="color:#a8a29e;">No complex words detected yet…</span>'; return; }
+    var shown = list.slice(0, 24);
+    box.innerHTML = '<div class="flex flex-wrap gap-2">' + shown.map(function (it) {
+      return '<span class="inline-flex items-center gap-2 text-sm rounded-full border hairline px-3 py-1.5" style="background:#fff;">'
+        + '<s style="color:#a8a29e;">' + esc(it.word) + '</s><span style="color:#d6d3d1;">→</span>'
+        + '<b style="color:#0d9488;">' + esc(it.suggestion) + '</b></span>';
+    }).join('') + '</div>'
+    + (list.length > 24 ? '<p class="text-xs mt-3" style="color:#a8a29e;">+ ' + (list.length - 24) + ' more — replace the ones above first.</p>' : '')
+    + '<p class="text-xs mt-2" style="color:#a8a29e;">Sorted hardest-first by syllable count.</p>';
+  }
+
+  function analyze() {
+    var text = $('rr-text').value;
+    var a = rrAnalyzeText(text);
+    $('rr-stat-words').textContent = a.words;
+    $('rr-stat-sentences').textContent = a.sentences;
+    $('rr-stat-syllables').textContent = a.syllables;
+    $('rr-stat-grade').textContent = fmt(a.overallGrade);
+
+    $('rr-score-flesch').textContent = fmt(a.fleschEase);
+    $('rr-score-fk').textContent = fmt(a.fkGrade);
+    $('rr-score-fog').textContent = fmt(a.gunningFog);
+    $('rr-score-smog').textContent = fmt(a.smog);
+    $('rr-score-cl').textContent = fmt(a.colemanLiau);
+
+    if (a.ok) {
+      $('rr-label-flesch').textContent = rrEaseLabel(a.fleschEase) + ' · ' + rrGradeLevel(a.fkGrade);
+      $('rr-label-fk').textContent = rrGradeLevel(a.fkGrade);
+      $('rr-label-fog').textContent = rrGradeLevel(a.gunningFog);
+      $('rr-label-smog').textContent = (a.sentences < 30 ? 'Short sample — directional only · ' : '') + rrGradeLevel(a.smog);
+      $('rr-label-cl').textContent = rrGradeLevel(a.colemanLiau);
+    }
+
+    renderAudience(a.ok ? a.overallGrade : null);
+    renderHeatmap(a.ok ? rrSentenceGrades(text) : []);
+    renderWorst(a.ok ? rrWorstSentence(text) : null);
+    renderSynonyms(a.ok ? rrSimplifyWords(text) : []);
+
+    try { localStorage.setItem('readrank-last', text.slice(0, 20000)); } catch (e) {}
+  }
+
+  function compare() {
+    var box = $('rr-compare-result');
+    var d = rrCompareRevisions($('rr-text').value, $('rr-revised').value);
+    if (!d.ok) { box.innerHTML = '<span style="color:#a8a29e;">Paste text in both boxes, then compare.</span>'; return; }
+    function row(label, dv, invert) {
+      if (dv == null) return '';
+      var good = invert ? dv > 0 : dv < 0; // ease: up is good; grades: down is good
+      var bad = invert ? dv < 0 : dv > 0;
+      var cls = good ? 'color:#166534;background:#dcfce7;' : (bad ? 'color:#991b1b;background:#fee2e2;' : 'color:#78716c;background:#f5f5f4;');
+      var arrow = dv > 0 ? '▲ +' : (dv < 0 ? '▼ ' : '• ');
+      return '<div class="flex justify-between items-center py-1.5 border-b hairline text-sm">'
+        + '<span>' + label + '</span>'
+        + '<span class="font-bold px-2 py-0.5 rounded" style="' + cls + '">' + arrow + dv + '</span></div>';
+    }
+    var banner = d.improved
+      ? '<div class="rounded-xl p-3 mb-3 text-sm font-bold" style="background:#dcfce7;color:#166534;">✓ Simpler! Overall grade fell by ' + Math.abs(d.deltaGrade) + '.</div>'
+      : (d.deltaGrade === 0
+        ? '<div class="rounded-xl p-3 mb-3 text-sm font-bold" style="background:#f5f5f4;color:#57534e;">No grade change — the rewrite reads about the same.</div>'
+        : '<div class="rounded-xl p-3 mb-3 text-sm font-bold" style="background:#fee2e2;color:#991b1b;">Harder than the original — grade rose by ' + d.deltaGrade + '. Try splitting sentences.</div>');
+    box.innerHTML = banner
+      + '<div class="text-xs uppercase tracking-widest mb-1" style="color:#a8a29e;">Original grade ' + d.original.overallGrade + ' → Revised ' + d.revised.overallGrade + ' · ' + d.original.words + ' → ' + d.revised.words + ' words</div>'
+      + row('Flesch Reading Ease', d.deltaEase, true)
+      + row('Flesch-Kincaid Grade', d.deltaFK, false)
+      + row('Gunning Fog', d.deltaFog, false)
+      + row('SMOG', d.deltaSMOG, false)
+      + row('Coleman-Liau', d.deltaCL, false);
+  }
+
+  function summaryText() {
+    var a = rrAnalyzeText($('rr-text').value);
+    if (!a.ok) return 'ReadRank report: no text analyzed yet.';
+    var L = [];
+    L.push('ReadRank readability report');
+    L.push('Words: ' + a.words + ' | Sentences: ' + a.sentences + ' | Syllables: ' + a.syllables);
+    L.push('Flesch Reading Ease: ' + a.fleschEase + ' (' + rrEaseLabel(a.fleschEase) + ')');
+    L.push('Flesch-Kincaid Grade: ' + a.fkGrade);
+    L.push('Gunning Fog: ' + a.gunningFog);
+    L.push('SMOG: ' + a.smog);
+    L.push('Coleman-Liau: ' + a.colemanLiau);
+    L.push('Overall grade: ' + a.overallGrade + ' (' + rrGradeLevel(a.overallGrade) + ')');
+    var w = rrWorstSentence($('rr-text').value);
+    if (w) L.push('Hardest sentence (grade ' + w.grade + '): ' + w.sentence);
+    return L.join('\n');
+  }
+
+  var timer = null;
+  $('rr-text').addEventListener('input', function () {
+    clearTimeout(timer);
+    timer = setTimeout(analyze, 350);
+  });
+  $('rr-analyze').addEventListener('click', analyze);
+  audSel.addEventListener('change', function () {
+    var a = rrAnalyzeText($('rr-text').value);
+    renderAudience(a.ok ? a.overallGrade : null);
+  });
+  $('rr-sample').addEventListener('click', function () { $('rr-text').value = SAMPLE; analyze(); });
+  $('rr-clear').addEventListener('click', function () { $('rr-text').value = ''; $('rr-revised').value = ''; analyze(); $('rr-compare-result').innerHTML = '<span style="color:#a8a29e;">The before/after scorecard will appear here…</span>'; });
+  $('rr-compare').addEventListener('click', compare);
+  $('rr-copy-summary').addEventListener('click', function () {
+    var t = summaryText();
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(t).then(function () { $('rr-copy-summary').textContent = 'Copied!'; setTimeout(function(){ $('rr-copy-summary').textContent = 'Copy report'; }, 1500); });
+    } else {
+      var ta = document.createElement('textarea'); ta.value = t; document.body.appendChild(ta); ta.select();
+      try { document.execCommand('copy'); } catch (e) {}
+      document.body.removeChild(ta);
+    }
+  });
+  $('rr-download').addEventListener('click', function () {
+    var blob = new Blob([summaryText()], { type: 'text/plain' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'readrank-report.txt';
+    document.body.appendChild(a); a.click();
+    setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+  });
+
+  try {
+    var saved = localStorage.getItem('readrank-last');
+    if (saved) { $('rr-text').value = saved; analyze(); }
+  } catch (e) {}
+})();
+</script>
+</body>
+</html>
